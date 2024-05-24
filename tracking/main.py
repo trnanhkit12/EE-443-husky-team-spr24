@@ -67,7 +67,7 @@ for split in ['test']:
                 frame = trk.times[idx]
                 x, y, w, h = trk.boxes[idx]
                 
-                result = '{},{},{},{},{},{},{},-1,-1 \n'.format(camera_id, final_tracking_id, frame, x, y, w, h )
+                result = '{},{},{},{},{},{},{},-1,-1 \n'.format(camera_id, final_tracking_id, frame, x-w/2, y-h/2, w, h )
         
                 tracking_result.append(result)
         

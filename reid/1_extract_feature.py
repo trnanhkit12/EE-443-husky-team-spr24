@@ -61,7 +61,7 @@ for split in ['test']:
             img_path = os.path.join(raw_data_root, split, folder, frame_id.zfill(5) + '.jpg')
             img = Image.open(img_path)
 
-            img_crop = img.crop((x, y, x+w, y+h))
+            img_crop = img.crop((x-w/2, y-h/2, x+w/2, y+h/2))
             img_crop = val_transforms(img_crop.convert('RGB')).unsqueeze(0)
             feature = reid_extractor(img_crop).cpu().detach().numpy()[0]
 
