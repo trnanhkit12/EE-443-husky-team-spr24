@@ -21,9 +21,9 @@ def is_valid_detection(detection, confidence_threshold, min_ratio, max_ratio):
 
   aspect_ratio = width / height if height != 0 else 0
 
-  if ((confidence < confidence_threshold) |
-    (min_ratio <= aspect_ratio) |
-    (aspect_ratio <= max_ratio)):
+  if ((confidence < confidence_threshold) or
+    (aspect_ratio <= min_ratio) or
+    (aspect_ratio >= max_ratio)):
     return False
   return True
 
@@ -35,10 +35,10 @@ for result in result_txt:
   with open(result_full_pth, 'r') as infile, open(result_filtered_pth, 'w') as outfile:
     for line in infile:
       detection = line.replace(',',' ')
-      detection = detection.strip().split()
+      detection = list(map(float, detection.strip().split()))
       if is_valid_detection(detection, CONFIDENCE_THRESHOLD,
                             MIN_ASPECT_RATIO_THRESHOLD,
                             MAX_ASPECT_RATIO_THRESHOLD):
-        lines_to_write = f'{int(detection[0])}, -1, {int(detection[2])}, {detection[3]},' \
+        line_to_write = f'{int(detection[0])}, -1, {int(detection[2])}, {detection[3]},' \
                           f' {detection[4]}, {detection[5]}, {detection[6]}, {detection[7]},-1'
-        outfile.write('\n'.join(lines_to_write))
+        outfile.write(line_to_write + '\n')
