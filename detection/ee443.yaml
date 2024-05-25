@@ -1,0 +1,6 @@
+path: /content/gdrive/MyDrive/EE443/final_proj/ultralytics_data # dataset root dir
+train: train  # train images (relative to 'path') 
+val: val # val images (relative to 'path') 
+
+names:
+  0: person
