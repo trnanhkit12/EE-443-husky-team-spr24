@@ -13,17 +13,18 @@ import torchreid
 from torchreid.reid.utils import FeatureExtractor
 
 
-raw_data_root = '/media/cycyang/sda1/EE443_final/data'
+raw_data_root = '/content/gdrive/MyDrive/EE443/final_proj/data'
 
 W, H = 1920, 1080
 data_list = {
     'test': ['camera_0008', 'camera_0019', 'camera_0028']
+    # 'val': ['camera_0005', 'camera_0017', 'camera_0025']
 }
 sample_rate = 1 # because we want to test on all frames
 
-det_path = '/media/cycyang/sda1/EE443_final/runs/detect/inference/txt'
-exp_path = '/media/cycyang/sda1/EE443_final/runs/reid/inference'
-reid_model_ckpt = '/media/cycyang/sda1/EE443_final/reid/osnet_x1_0_imagenet.pth'
+det_path = '/content/gdrive/MyDrive/EE443/final_proj/EE-443-husky-team-spr24/runs/detect/inference/txt'
+exp_path = '/content/gdrive/MyDrive/EE443/final_proj/EE-443-husky-team-spr24/runs/detect/inference'
+reid_model_ckpt = '/content/gdrive/MyDrive/EE443/final_proj/EE-443-husky-team-spr24/reid/osnet_x1_0_imagenet.pth'
 
 val_transforms = T.Compose([
     T.Resize([256, 128]),

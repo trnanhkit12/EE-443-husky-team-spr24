@@ -6,6 +6,7 @@ MAX_ASPECT_RATIO_THRESHOLD = 0.7
 # preprocess.py
 def is_valid_detection(detection, confidence_threshold, min_ratio, max_ratio):
   """
+  cited from chatGPT
   Determines if a detection is valid based on confidence score and aspect ratio.
 
   Args:
