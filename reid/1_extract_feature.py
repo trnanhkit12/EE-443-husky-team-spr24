@@ -17,7 +17,8 @@ raw_data_root = '/content/gdrive/MyDrive/EE443/final_proj/data'
 
 W, H = 1920, 1080
 data_list = {
-    'test': ['camera_0008', 'camera_0019', 'camera_0028']
+    # 'test': ['camera_0008', 'camera_0019', 'camera_0028']
+    'test': ['camera_0028']
     # 'val': ['camera_0005', 'camera_0017', 'camera_0025']
 }
 sample_rate = 1 # because we want to test on all frames
@@ -45,7 +46,7 @@ for split in ['test']:
         det_txt_path = os.path.join(det_path, f'{folder}.txt')
         print(f"Extracting feature from {det_txt_path}")
 
-        dets = np.genfromtxt(det_txt_path, dtype=str,delimiter=',')[:100]
+        dets = np.genfromtxt(det_txt_path, dtype=str,delimiter=',')
 
         # start extracting frame features
         cur_frame = 0
