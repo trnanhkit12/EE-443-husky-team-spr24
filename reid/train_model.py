@@ -3,8 +3,8 @@ from torchreid import models, utils
 import torch
 
 datamanager = torchreid.data.ImageDataManager(
-    root='reid-data',
-    sources=['market1501', 'dukemtmcreid', 'cuhk03', 'msmt17'],
+    root='/content/gdrive/MyDrive/EE443/final_proj/dataset_for_reid_train',
+    sources=['market1501'],
     height=256,
     width=128,
     batch_size=32
@@ -38,7 +38,7 @@ engine = torchreid.engine.ImageSoftmaxEngine(
 )
 
 engine.run(
-    save_dir='log/resnet50',            # TODO: fix this for drive
+    save_dir='log/osnet_ain',            # TODO: fix this for drive
     max_epoch=60,
     eval_freq=10,
     print_freq=10,

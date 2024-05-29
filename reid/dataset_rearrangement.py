@@ -30,8 +30,9 @@ class dir_manager():
     self.train_path = in_dir
     self.exp_path = out_dir
     self.cur_pid_range = 0
-    self.test = 0
-
+    self.test_in = 1
+    self.test_out = 2
+    
   # data (np.array): the raw data corresponding to (train, query, or bbox_test)
   # exp (str): the type of data being saved (train, query, or bbox_test)
   # exp_pth (str): the exporting-to directory
@@ -42,9 +43,9 @@ class dir_manager():
       if not os.path.exists(full_res_path):
           os.makedirs(full_res_path)
       for (camera_id, p_id, frame_id, x, y, w, h,) in data:
-          if self.test == 0:
-            print('in process_dir for loop')
-            self.test += 1
+          if self.test_in != self.test_out:
+            print(f'in process_dir for loop {self.test_in}')
+            self.test_in += 1
           camera_id_str = 'camera_' + camera_id.astype('str').zfill(4)
           img_path = os.path.join(self.train_path, camera_id_str, frame_id.astype\
                                   ('str').zfill(5) + '.jpg')
@@ -57,11 +58,13 @@ class dir_manager():
                      + frame_id.astype('str').zfill(6) + '_00.jpg'
           img_saved_path = os.path.join(full_res_path, img_name)
           img_crop.save(img_saved_path, 'JPEG')
+      self.test_out += 1
 
 
   # given different datasets, produce different datasets that follows the format of Market_1501
   def process_diff_dataset(self, datset):
       for idx, dat_set in enumerate(datset):
+          idx += 1 
           # cur_exp_path = os.path.join(self.exp_path, f'dat_set{idx}')
           cur_exp_path = os.path.join(self.exp_path)
           train_txt_path = [os.path.join(self.train_path, f'{folder}.txt') for folder in dat_set]
@@ -71,13 +74,14 @@ class dir_manager():
 
           pid = np.unique(dat[:, 1]).astype('str')
           tot_pid = len(pid)
-          self.cur_pid_range += tot_pid
-
-          train_pid = np.arange(int(tot_pid * TRAIN_RATIO))
+          self.cur_pid_range += np.max(pid.astype('int16'))
+          
+          tot_train_set_len = int(tot_pid * TRAIN_RATIO)
+          train_pid = np.array([pid[i] for i in range(tot_train_set_len)]).astype('int16')
           train_idx = np.where(np.isin(dat[:, 1], train_pid.astype('str')))
           train_set = dat[train_idx]
 
-          test_pid = np.arange(int(tot_pid * TRAIN_RATIO), tot_pid)
+          test_pid = np.array([pid[i] for i in range(tot_train_set_len, tot_pid)]).astype('int16')
           camid = np.array([int(cam_str[-4:]) for cam_str in dat_set])
 
           query_idx = np.where((np.isin(dat[:, 1], test_pid.astype('str'))) 
@@ -87,8 +91,7 @@ class dir_manager():
           bbox_test_idx = np.where((np.isin(dat[:, 1], test_pid.astype('str'))) 
                                     & (np.isin(dat[:, 0], camid[1].astype('str'))))
           bbox_test_set = dat[bbox_test_idx]
-          # print(train_set[0])
-          print('Processing 0th dataset')
+          print(f'Processing {idx} dataset')
           print('     Processing bounding_box_train')
           self.process_dir(train_set, 'bounding_box_train', cur_exp_path)
           print('     Processing bounding_box_test')
