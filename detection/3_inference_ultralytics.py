@@ -2,7 +2,7 @@ import os
 from ultralytics import YOLO
 
 
-raw_data_root = '/media/cycyang/sda1/EE443_final/data'
+raw_data_root = 'C:/Users/antho/EE-443-husky-team-spr24/data'
 
 W, H = 1920, 1080
 data_list = {
@@ -11,8 +11,8 @@ data_list = {
 sample_rate = 1 # because we want to test on all frames
 vis_flag = True # set to True to save the visualizations
 
-exp_path = '/media/cycyang/sda1/EE443_final/runs/detect/inference'
-model_path = '/media/cycyang/sda1/EE443_final/runs/detect/train/weights/best.pt'
+exp_path = 'C:/Users/antho/EE-443-husky-team-spr24/runs/detect/inference'
+model_path = 'C:/Users/antho/EE-443-husky-team-spr24/runs/detect/train/weights/best.pt'
 det_model = YOLO(model_path)
 
 for split in ['test']:
@@ -37,9 +37,9 @@ for split in ['test']:
             confs = results[0].boxes.conf.cpu().numpy().tolist()
 
             if vis_flag:
-                save_vis_img_path = os.path.join(exp_path, 'vis', folder, img_name)   
+                save_vis_img_path = os.path.join(exp_path, 'vis', folder, img_name)
                 results[0].save(filename=save_vis_img_path)
-            
+
             # {camera_id}, {-1}, {frame_id}, {x}, {y}, {w}, {h}, {confidence}, {-1}
             for box, conf in zip(boxes, confs):
                 x, y, w, h = box

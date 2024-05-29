@@ -45,7 +45,7 @@ for split in ['test']:
         # Detection format: <camera ID>, <-1>, <Frame ID>, <x1>, <y1>, <w>, <h>, <confidence score>
         # Remember to change the embedding file too if you modify the detection!
 
-        mot = tracker()
+        mot = tracker()y
         postprocessing = postprocess(number_of_people=20, cluster_method='kmeans')
 
         # Run the IoU tracking
@@ -66,11 +66,11 @@ for split in ['test']:
 
                 frame = trk.times[idx]
                 x, y, w, h = trk.boxes[idx]
-                
+
                 result = '{},{},{},{},{},{},{},-1,-1 \n'.format(camera_id, final_tracking_id, frame, x-w/2, y-h/2, w, h )
-        
+
                 tracking_result.append(result)
-        
+
         print('Save tracking results at {}'.format(tracking_txt_path))
 
         with open(tracking_txt_path,'w') as f:
@@ -123,11 +123,11 @@ for split in ['test']:
     #         frame = trk.times[idx]
     #         x1,y1,x2,y2 = trk.boxes[idx]
     #         x,y,w,h = x1,y1,x2-x1,y2-y1
-            
+
     #         result = '{},{},{},{},{},{},{},-1,-1 \n'.format(camera, final_tracking_id, frame, x, y, w, h )
-    
+
     #         tracking_result.append(result)
-    
+
     # print('Save tracking results at {}'.format(result_path))
 
     # with open(result_path,'w') as f:

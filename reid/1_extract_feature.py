@@ -35,8 +35,8 @@ reid_extractor = FeatureExtractor(
     model_name='osnet_x1_0',
     model_path=reid_model_ckpt,
     image_size=[256, 128],
-    device='cuda' 
-)   
+    device='cuda'
+)
 
 for split in ['test']:
     for folder in data_list[split]:
@@ -51,13 +51,13 @@ for split in ['test']:
         emb = np.array([None] * len(dets)) # initialize the feature array
 
         for idx, (camera_id, _, frame_id, x, y, w, h, score, _) in enumerate(dets):
-            
+
             x, y, w, h = map(float, [x, y, w, h])
             frame_id = str(int(frame_id)) # remove leading space
-            
+
             if idx % 1000 == 0:
                 print(f'Processing frame {frame_id} | {idx}/{len(dets)}')
-            
+
             img_path = os.path.join(raw_data_root, split, folder, frame_id.zfill(5) + '.jpg')
             img = Image.open(img_path)
 
@@ -75,6 +75,6 @@ for split in ['test']:
         np.save(emb_save_path,emb)
 
 
-# TODO 
+# TODO
 # 1. You can try to extract features from the validation set since we have the ground truth labels
 # 2. To determine how good the features, simply use the features to do the clustering and compare the clustering result with the ground truth labels

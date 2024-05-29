@@ -7,8 +7,8 @@ import json
 import shutil
 
 # root path to your data folder
-raw_data_root = '/media/cycyang/sda1/EE443_final/data'
-ultra_data_root = '/media/cycyang/sda1/EE443_final/ultralytics_data'
+raw_data_root = 'C:/Users/antho/EE-443-husky-team-spr24/data'
+ultra_data_root = 'C:/Users/antho/EE-443-husky-team-spr24/ultralytics_data'
 
 # shared variables
 W, H = 1920, 1080
@@ -19,7 +19,7 @@ data_list = {
 sample_rate = 100 # use 1 frame from every {sample_rate} frames to train
 
 for split in ['train', 'val']:
-    # path where you want to move and rename the images 
+    # path where you want to move and rename the images
     ultra_img_path = osp.join(ultra_data_root, split, 'images')
     # path where you want to create the labels
     ultra_label_path = osp.join(ultra_data_root, split, 'labels')
@@ -69,7 +69,7 @@ if __name__ == "__main__":
                 cls = np.array([0] * len(frame_det))
 
                 label = np.stack([cls, normalized_center_x, normalized_center_y, normalized_w, normalized_h], axis=1)
-                
+
                 label_path = osp.join(ultra_label_path, f'{folder}_{int(frame_id):05d}.txt')
 
                 np.savetxt(label_path, label, fmt='%.3f', delimiter=' ')

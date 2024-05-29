@@ -36,12 +36,13 @@ Details for expected formats can be found at https://www.aicitychallenge.org/.
 
 See `python3 eval.py --help` for more info.
 
+
 """
 
 
 def getData(fh, fpath, names=None, sep='\s+|\t+|,'):
     """ Get the necessary track data from a file handle.
-    
+
     Params
     ------
     fh : opened handle
@@ -58,27 +59,27 @@ def getData(fh, fpath, names=None, sep='\s+|\t+|,'):
         Data frame containing the data loaded from the stream with optionally assigned column names.
         No index is set on the data.
     """
-    
+
     try:
         df = pd.read_csv(
-            fpath, 
-            sep=sep, 
-            index_col=None, 
-            skipinitialspace=True, 
+            fpath,
+            sep=sep,
+            index_col=None,
+            skipinitialspace=True,
             header=None,
             names=names,
             engine='python'
         )
-        
+
         return df
-    
+
     except Exception as e:
         raise ValueError("Could not read input from %s. Error: %s" % (fpath, repr(e)))
 
 
 def readData(fpath):
-    """ Read test or pred data for a given track. 
-    
+    """ Read test or pred data for a given track.
+
     Params
     ------
     fpath : str
@@ -93,7 +94,7 @@ def readData(fpath):
         May raise a ValueError exception if file cannot be opened or read.
     """
     names = ['CameraId','Id', 'FrameId', 'X', 'Y', 'Width', 'Height', 'Xworld', 'Yworld']
-        
+
     if not os.path.isfile(fpath):
         raise ValueError("File %s does not exist." % fpath)
     # Gzip tar archive
@@ -126,7 +127,7 @@ def readData(fpath):
 
 def print_results(summary, mread=False):
     """Print a summary dataframe in a human- or machine-readable format.
-    
+
     Params
     ------
     summary : pandas.DataFrame
@@ -141,7 +142,7 @@ def print_results(summary, mread=False):
     if mread:
         print('{"results":%s}' % summary.iloc[-1].to_json())
         return
-    
+
     formatters = {'idf1': '{:2.2f}'.format,
                   'idp': '{:2.2f}'.format,
                   'idr': '{:2.2f}'.format,
@@ -157,10 +158,10 @@ def print_results(summary, mread=False):
                   'partially_tracked': '{:1}'.format,
                   'mostly_lost': '{:1}'.format,
                  }
-    
-    
+
+
     summary = summary[['idf1','idp','idr','idtp','idfp','idfn','mota','motp','recall','precision','num_switches','mostly_tracked','partially_tracked','mostly_lost']]
-    
+
     #summary = summary[['idf1','idp','idr','mota','motp','recall','precision','num_switches']]
     summary['idp'] *= 100
     summary['idr'] *= 100
@@ -183,7 +184,7 @@ def eval(test, pred, **kwargs):
     Params
     ------
     test : pandas.DataFrame
-        Labeled data for the test set. Minimum columns that should be present in the 
+        Labeled data for the test set. Minimum columns that should be present in the
         data frame include ['CameraId','Id', 'FrameId', 'X', 'Y', 'Width', 'Height'].
     pred : pandas.DataFrame
         Predictions for the same frames as in the test data.
@@ -205,11 +206,11 @@ def eval(test, pred, **kwargs):
     mread  = kwargs.pop('mread', False)
     dstype = kwargs.pop('dstype', 'train')
     roidir = kwargs.pop('roidir', 'ROIs')
-    
+
     # Internal evaluation functions
     def removeOutliersROI(df, dstype='train', roidir='ROIs', cid=None):
         """ Remove outliers from the submitted test df that are outsize the region of interest for each camera.
-        
+
         Params
         ------
         df : pandas.dfFrame
@@ -231,7 +232,7 @@ def eval(test, pred, **kwargs):
 
         def loadroi(cid):
             """Read the ROI image for a given camera.
-        
+
             Params
             ------
             cid : int
@@ -249,16 +250,16 @@ def eval(test, pred, **kwargs):
             img.load()
             if img.size[0] > img.size[1]:
                 img = img.transpose(Image.TRANSPOSE)
-                
+
             im = np.asarray( img, dtype="uint8" )
             if im.shape[0] > im.shape[1]:
                 im = im.T
 
             return im
-        
+
         def isROIOutlier(row, roi, height, width):
             """Check whether item stored in row is outside the region of interest.
-            
+
             Params
             ------
             row : pandas.Series
@@ -278,7 +279,7 @@ def eval(test, pred, **kwargs):
             ymin = row['Y']
             xmax = row['X'] + row['Width']
             ymax = row['Y'] + row['Height']
-        
+
             if xmin >= 0 and xmin < width:
                 if ymin >= 0 and ymin < height and roi[ymin, xmin] < 255:
                     return True
@@ -330,9 +331,9 @@ def eval(test, pred, **kwargs):
                     height, width = roi.shape
                 if isROIOutlier(row, roi, height, width):
                     df.at[i, 'NotOutlier'] = False
-                    
+
             return df[df['NotOutlier']].drop(columns=['NotOutlier'])
-        
+
         df = df[df['CameraId']==cid].copy()
         # Make sure df is sorted appropriately
         df.sort_values(['CameraId', 'FrameId'], inplace=True)
@@ -343,12 +344,12 @@ def eval(test, pred, **kwargs):
         for i, row in df.iterrows():
             if isROIOutlier(row, roi, height, width):
                 df.at[i, 'NotOutlier'] = False
-                
+
         return df[df['NotOutlier']].drop(columns=['NotOutlier'])
 
     def removeOutliersSingleCam(df):
         """Remove outlier objects that appear in a single camera.
-        
+
         Params
         ------
         df : pandas.DataFrame
@@ -362,7 +363,7 @@ def eval(test, pred, **kwargs):
         cnt = df[['CameraId','Id']].drop_duplicates()[['Id']].groupby(['Id']).size()
         # keep only those Ids with a camera count > 1
         keep = cnt[cnt > 1]
-        
+
         # retrict the data to kept ids
         return df.loc[df['Id'].isin(keep.index)]
 
@@ -382,10 +383,10 @@ def eval(test, pred, **kwargs):
         df = df.drop_duplicates(subset=['CameraId', 'Id', 'FrameId'], keep='first')
 
         return df
-        
+
     def compare_dataframes_mtmc(gts, ts):
         """Compute ID-based evaluation metrics for multi-camera multi-object tracking.
-        
+
         Params
         ------
         gts : pandas.DataFrame
@@ -432,12 +433,12 @@ def eval(test, pred, **kwargs):
         return summary
 
     mh = mm.metrics.create()
-    
+
     # filter prediction data
     #pred = removeOutliersROI(pred, dstype=dstype, roidir=roidir)
     #pred = removeOutliersSingleCam(pred)
     pred = removeRepetition(pred)
-    
+
     # evaluate results
     return compare_dataframes_mtmc(test, pred)
 
@@ -454,7 +455,7 @@ if __name__ == '__main__':
     args = get_args()
     if not args.data or len(args.data) < 2:
         usage("Incorrect number of arguments. Must provide paths for the test (ground truth) and predicitons.")
-    
+
     test = readData(args.data[0])
     pred = readData(args.data[1])
     try:
@@ -463,6 +464,6 @@ if __name__ == '__main__':
     except Exception as e:
         if args.mread:
             print('{"error": "%s"}' % repr(e))
-        else: 
+        else:
             print("Error: %s" % repr(e))
         traceback.print_exc()

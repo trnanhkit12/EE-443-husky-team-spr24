@@ -1,6 +1,6 @@
-path: /media/cycyang/sda1/EE443_final/ultralytics_data/ # dataset root dir
-train: train  # train images (relative to 'path') 
-val: val # val images (relative to 'path') 
+path: C:\Users\antho\EE-443-husky-team-spr24\data # dataset root dir
+train: train  # train images (relative to 'path')
+val: val # val images (relative to 'path')
 
 names:
   0: person

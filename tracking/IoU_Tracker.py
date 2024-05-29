@@ -20,7 +20,7 @@ def calculate_iou(bbox1, bbox2):
 
     if x_right < x_left or y_bottom < y_top:
         return 0.0
-    
+
     area_bbox1 = (x2_1 - x1_1 + 1) * (y2_1 - y1_1 + 1)
     area_bbox2 = (x2_2 - x1_2 + 1) * (y2_2 - y1_2 + 1)
     intersection_area = (x_right - x_left + 1) * (y_bottom - y_top + 1)
@@ -42,17 +42,17 @@ class tracklet:
         self.alive = True
 
         self.final_features = None
-    
+
     def update(self,box,feature,time):
         self.cur_box = box
         self.boxes.append(box)
         self.cur_feature = None # You might need to do the update if you also want to use features for tracking
         self.features.append(feature)
         self.times.append(time)
-    
+
     def close(self):
         self.alive = False
-    
+
     def get_avg_features(self):
         self.final_features = sum(self.features)/len(self.features) # we do the average pooling for the final features
 
@@ -64,7 +64,7 @@ class tracker:
         self.cur_tracklets = []
 
     def run(self, detections, features=None):
-        
+
         for frame_id in range(0,3600):
 
             if frame_id % 100 == 0:
@@ -74,21 +74,21 @@ class tracker:
             cur_frame_detection = detections[inds]
             if features is not None:
                 cur_frame_features = features[inds]
-            
+
             # no tracklets in the first frame
             if len(self.cur_tracklets) == 0:
                 for idx in range(len(cur_frame_detection)):
                     new_tracklet = tracklet(len(self.all_tracklets)+1,cur_frame_detection[idx][3:7],cur_frame_features[idx],frame_id)
                     self.cur_tracklets.append(new_tracklet)
                     self.all_tracklets.append(new_tracklet)
-            
+
             else:
                 cost_matrix = np.zeros((len(self.cur_tracklets),len(cur_frame_detection)))
 
                 for i in range(len(self.cur_tracklets)):
                     for j in range(len(cur_frame_detection)):
                         cost_matrix[i][j] = 1 - calculate_iou(self.cur_tracklets[i].cur_box,cur_frame_detection[j][3:7])
-                
+
                 row_inds,col_inds = linear_sum_assignment(cost_matrix)
 
                 matches = min(len(row_inds),len(col_inds))
@@ -109,8 +109,8 @@ class tracker:
                         new_tracklet = tracklet(len(self.all_tracklets)+1,det[3:7],cur_frame_features[idx],frame_id)
                         self.cur_tracklets.append(new_tracklet)
                         self.all_tracklets.append(new_tracklet)
-            
-            self.cur_tracklets = [trk for trk in self.cur_tracklets if trk.alive]            
+
+            self.cur_tracklets = [trk for trk in self.cur_tracklets if trk.alive]
 
         final_tracklets = self.all_tracklets
 
