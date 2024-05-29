@@ -38,8 +38,7 @@ scheduler = torchreid.optim.build_lr_scheduler(
 )
 
 engine = torchreid.engine.ImageSoftmaxEngine(
-    datamanager, model_osnet_ain, optimizer, margin=0.3,
-    weight_t=0.7, weight_x=1, scheduler=scheduler
+    datamanager, model_osnet_ain, optimizer, scheduler=scheduler,
 )
 
 engine.run(
