@@ -50,11 +50,11 @@ class dir_manager():
           img_path = os.path.join(self.train_path, camera_id_str, frame_id.astype\
                                   ('str').zfill(5) + '.jpg')
           img = Image.open(img_path)
-          img_crop = img.crop((x-w/2, y-h/2, x+w/2, y+h/2))
+          img_crop = img.crop((x, y, x+w, y+h))
 
           # 0001_c1s1_001051_00.jpg
           # {pid}_{camid}s1_frameid_00.jpg
-          img_name = p_id.astype('str').zfill(4) + f'_{camera_id}s1_'\
+          img_name = p_id.astype('str').zfill(4) + f'_c{camera_id}s1_'\
                      + frame_id.astype('str').zfill(6) + '_00.jpg'
           img_saved_path = os.path.join(full_res_path, img_name)
           img_crop.save(img_saved_path, 'JPEG')

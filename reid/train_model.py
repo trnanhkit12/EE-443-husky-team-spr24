@@ -7,16 +7,18 @@ datamanager = torchreid.data.ImageDataManager(
     sources=['market1501'],
     height=256,
     width=128,
-    batch_size=32
+    batch_size_train=34,
+    batch_size_test=128
 )
 
-reid_model_ckpt = '/content/gdrive/MyDrive/EE443/final_proj/EE-443-husky-team-spr24/reid/osnet_x1_0_imagenet.pth'
-checkpoint = torch.load(reid_model_ckpt)
-model_osnet = checkpoint['model']
+# reid_model_ckpt = '/content/gdrive/MyDrive/EE443/final_proj/EE-443-husky-team-spr24/reid/osnet_x1_0_imagenet.pth'
+# checkpoint = torch.load(reid_model_ckpt)
+# model_osnet = checkpoint['model']
 
 model_osnet_ain = models.build_model(name='osnet_ain_x1_0',
-                            num_classes=40,
+                            num_classes=66,
                             loss="softmax")
+model_osnet_ain = model_osnet_ain.cuda()
 
 optimizer = torchreid.optim.build_optimizer(
     model_osnet_ain,
@@ -30,16 +32,17 @@ optimizer = torchreid.optim.build_optimizer(
 scheduler = torchreid.optim.build_lr_scheduler(
     optimizer,
     lr_scheduler='single_step',
-    stepsize=20
+    stepsize=15
 )
 
 engine = torchreid.engine.ImageSoftmaxEngine(
-    datamanager, model_osnet_ain, optimizer
+    datamanager, model_osnet_ain, optimizer, margin=0.3,
+    weight_t=0.7, weight_x=1, scheduler=scheduler
 )
 
 engine.run(
     save_dir='log/osnet_ain',            # TODO: fix this for drive
-    max_epoch=60,
+    max_epoch=30,
     eval_freq=10,
     print_freq=10,
     test_only=False,
