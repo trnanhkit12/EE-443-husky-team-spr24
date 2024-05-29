@@ -10,13 +10,15 @@ datamanager = torchreid.data.ImageDataManager(
     batch_size_train=34,
     batch_size_test=128
 )
-
+# osnet_ain_model_ckpt = '/content/gdrive/MyDrive/EE443/final_proj/EE-443-husky-team-spr24/log/osnet_ain/events.out.tfevents.1716974331.cbea3be40bd7.33904.0'
 # reid_model_ckpt = '/content/gdrive/MyDrive/EE443/final_proj/EE-443-husky-team-spr24/reid/osnet_x1_0_imagenet.pth'
-# checkpoint = torch.load(reid_model_ckpt)
+# checkpoint = torch.load(osnet_ain_model_ckpt)
 # model_osnet = checkpoint['model']
 
-model_osnet_ain = models.build_model(name='osnet_ain_x1_0',
+model_osnet_ain = models.build_model(
+                            name='osnet_ain_x1_0',
                             num_classes=66,
+                            pretrained=True,
                             loss="softmax")
 model_osnet_ain = model_osnet_ain.cuda()
 
@@ -32,7 +34,7 @@ optimizer = torchreid.optim.build_optimizer(
 scheduler = torchreid.optim.build_lr_scheduler(
     optimizer,
     lr_scheduler='single_step',
-    stepsize=15
+    stepsize=7
 )
 
 engine = torchreid.engine.ImageSoftmaxEngine(
