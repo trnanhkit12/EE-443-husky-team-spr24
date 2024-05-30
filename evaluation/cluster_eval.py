@@ -44,7 +44,7 @@ print(reshaped_emb.shape)
 print(f"Combined shape: {reshaped_emb.shape}")  # This should be (167188, 512)
 
 # Number of clusters
-num_clusters = 23  # You can choose the number of clusters based on your requirements
+num_clusters = unique_count  # You can choose the number of clusters based on your requirements
 
 # Perform k-means clustering
 kmeans = KMeans(n_clusters=num_clusters, random_state=42)
