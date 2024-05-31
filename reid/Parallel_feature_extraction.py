@@ -24,6 +24,10 @@ reid_first_model_ckpt = '/content/gdrive/MyDrive/EE443/final_proj/EE-443-husky-t
 reid_second_model_ckpt = '/content/gdrive/MyDrive/EE443/final_proj/EE-443-husky-team-spr24/log/osnet_ain/model/model.pth.tar-12'
 gt_path = '/content/gdrive/MyDrive/EE443/final_proj/data/train'
 
+det_path = '/content/gdrive/MyDrive/EE443/final_proj/EE-443-husky-team-spr24/runs/detect/inference/txt'
+exp_path = '/content/gdrive/MyDrive/EE443/final_proj/EE-443-husky-team-spr24/runs/detect/inference'
+reid_model_ckpt = '/content/gdrive/MyDrive/EE443/final_proj/EE-443-husky-team-spr24/reid/osnet_x1_0_imagenet.pth'
+
 data_list = {
     'train': ['camera_0003'],    
     # 'test' : ['camera_0008', 'camera_0019', 'camera_0028'],
@@ -57,7 +61,9 @@ reid_extractor2 = FeatureExtractor(
 
 for split in ['train']:
     for folder in data_list[split]:
-        det_txt_path = os.path.join(gt_path, f'{folder}.txt')
+        # det_txt_path = os.path.join(gt_path, f'{folder}.txt')                 # TESTING
+        det_txt_path = os.path.join(det_path, f'{folder}_filt.txt')             # OFFICIAL FOR TESTING
+        # det_txt_path = os.path.join(det_path, f'{folder}.txt')                # ORIGINAL
         print(f"Extracting feature from {det_txt_path}")
 
         dets = np.genfromtxt(det_txt_path, dtype=str, delimiter=',')
@@ -65,7 +71,8 @@ for split in ['train']:
         emb = np.array([None] * len(dets))  # initialize the feature array
         emb2 = np.array([None] * len(dets))  # initialize the feature array 
 
-        for idx, (camera_id, _, frame_id, x, y, w, h) in enumerate(dets):
+        # for idx, (camera_id, _, frame_id, x, y, w, h) in enumerate(dets):     # TESTING
+        for idx, (camera_id, _, frame_id, x, y, w, h, score, _) in enumerate(dets):   # ORIGINAL FOR DET RESULTS
             x, y, w, h = map(float, [x, y, w, h])
             frame_id = str(int(frame_id))  # remove leading space
 
@@ -89,7 +96,8 @@ for split in ['train']:
         print(reshaped_emb2.shape)
         shaped_emb = np.concatenate((reshaped_emb.T, reshaped_emb2.T)).T
         print(shaped_emb.shape)
-        emb_save_path = os.path.join(exp_path, f'{folder}_merged.npy')
+        # emb_save_path = os.path.join(exp_path, f'{folder}_merged.npy')        # ORIGINAL
+        emb_save_path = os.path.join(exp_path, f'{folder}_merged_filt.npy')
         if not os.path.exists(exp_path):
             os.makedirs(exp_path)
         np.save(emb_save_path, shaped_emb)

@@ -6,7 +6,8 @@ raw_data_root = '/content/gdrive/MyDrive/EE443/final_proj/data'
 
 W, H = 1920, 1080
 data_list = {
-    'test': ['camera_0008', 'camera_0019', 'camera_0028']
+    # 'test': ['camera_0008', 'camera_0019', 'camera_0028'],
+    'train': ['camera_0003']
 }
 sample_rate = 1 # because we want to test on all frames
 vis_flag = True # set to True to save the visualizations
@@ -15,7 +16,8 @@ exp_path = '/content/gdrive/MyDrive/EE443/final_proj/EE-443-husky-team-spr24/run
 model_path = '/content/gdrive/MyDrive/EE443/final_proj/EE-443-husky-team-spr24/runs/detect/train3/weights/best.pt'
 det_model = YOLO(model_path)
 
-for split in ['test']:
+# for split in ['test']:
+for split in ['train']:
     for folder in data_list[split]:
 
         camera_img_folder = os.path.join(raw_data_root, split, folder)
