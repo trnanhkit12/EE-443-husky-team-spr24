@@ -1,13 +1,8 @@
-# This is the baseline code for the single camera tracker using bounding box IoU (intersection over union)
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
-# calculate the overlap ratio of two bounding boxes
+# Calculate the overlap ratio of two bounding boxes
 def calculate_iou(bbox1, bbox2):
-
-    # x1_1, y1_1, x2_1, y2_1 = bbox1
-    # x1_2, y1_2, x2_2, y2_2 = bbox2
-
     x1_1, y1_1, w1, h1 = bbox1
     x1_2, y1_2, w2, h2 = bbox2
     x2_1, y2_1 = x1_1 + w1, y1_1 + h1
@@ -43,9 +38,9 @@ def combined_cost(bbox1, bbox2, feat1, feat2, alpha=0.5):
     cost = alpha * (1 - iou) + (1 - alpha) * (1 - appearance_sim)
     return cost
 
-# base class for tracklet
+# Base class for tracklet
 class tracklet:
-    def __init__(self,tracking_ID,box,feature,time):
+    def __init__(self, tracking_ID, box, feature, time):
         self.ID = tracking_ID
         self.boxes = [box]
         self.features = [feature]
@@ -57,10 +52,10 @@ class tracklet:
 
         self.final_features = None
 
-    def update(self,box,feature,time):
+    def update(self, box, feature, time):
         self.cur_box = box
         self.boxes.append(box)
-        self.cur_feature = None # You might need to do the update if you also want to use features for tracking
+        self.cur_feature = feature
         self.features.append(feature)
         self.times.append(time)
 
@@ -68,14 +63,14 @@ class tracklet:
         self.alive = False
 
     def get_avg_features(self):
-        self.final_features = np.mean(self.features, axis=0) # we do the average pooling for the final features
+        self.final_features = np.mean(self.features, axis=0)  # average pooling for the final features
 
-
-# class for multi-object tracker
-class tracker:
-    def __init__(self):
+# Class for multi-object tracker
+class AppearanceIoUTracker:
+    def __init__(self, alpha=0.5):
         self.all_tracklets = []
         self.cur_tracklets = []
+        self.alpha = alpha
 
     def run(self, detections, features):
         for frame_id in range(len(detections)):
@@ -93,7 +88,8 @@ class tracker:
                 for i in range(len(self.cur_tracklets)):
                     for j in range(len(cur_frame_detection)):
                         cost_matrix[i][j] = combined_cost(self.cur_tracklets[i].cur_box, cur_frame_detection[j][3:7],
-                                                          self.cur_tracklets[i].cur_feature, cur_frame_features[j])
+                                                          self.cur_tracklets[i].cur_feature, cur_frame_features[j],
+                                                          self.alpha)
 
                 row_inds, col_inds = linear_sum_assignment(cost_matrix)
 
@@ -110,7 +106,7 @@ class tracker:
                     else:
                         self.cur_tracklets[row].update(cur_frame_detection[col][3:7], cur_frame_features[col], frame_id)
 
-                # initiate unmatched detections as new tracklets
+                # Initiate unmatched detections as new tracklets
                 for idx, det in enumerate(cur_frame_detection):
                     if idx not in col_inds:  # if it is not matched in the above Hungarian algorithm stage
                         new_tracklet = tracklet(len(self.all_tracklets) + 1, det[3:7], cur_frame_features[idx], frame_id)
@@ -121,7 +117,7 @@ class tracker:
 
         final_tracklets = self.all_tracklets
 
-        # calculate an average final features (512x1) for all the tracklets
+        # Calculate an average final features (512x1) for all the tracklets
         for trk_id in range(len(final_tracklets)):
             final_tracklets[trk_id].get_avg_features()
 
