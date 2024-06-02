@@ -9,7 +9,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import confusion_matrix
 from scipy.optimize import linear_sum_assignment
 from sklearn.metrics import precision_score, recall_score, f1_score
-
+from sklearn.metrics import adjusted_rand_score
 
 feature_path = 'C:/Users/pt101/Desktop/EE-443-husky-team-spr24-master/runs/reid/inference/camera_0003.npy'
 groundtruth_path = 'C:/Users/pt101/Desktop/EE-443-husky-team-spr24-master/data/train/camera_0003.txt'
@@ -83,3 +83,4 @@ f1 = f1_score(ground_truth_pids, new_cluster_labels, average='weighted')
 print(f"Precision: {precision:.4f}")
 print(f"Recall: {recall:.4f}")
 print(f"F1 Score: {f1:.4f}")
+print(f" Rand Index: {adjusted_rand_score(ground_truth_pids, new_cluster_labels):.4f}")
