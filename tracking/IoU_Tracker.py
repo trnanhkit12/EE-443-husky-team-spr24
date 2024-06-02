@@ -29,6 +29,20 @@ def calculate_iou(bbox1, bbox2):
 
     return iou
 
+# Calculate appearance similarity (cosine similarity)
+def calculate_appearance_similarity(feat1, feat2):
+    feat1 = np.array(feat1)
+    feat2 = np.array(feat2)
+    cos_sim = np.dot(feat1, feat2) / (np.linalg.norm(feat1) * np.linalg.norm(feat2))
+    return cos_sim
+
+# Combined cost function using IoU and appearance similarity
+def combined_cost(bbox1, bbox2, feat1, feat2, alpha=0.5):
+    iou = calculate_iou(bbox1, bbox2)
+    appearance_sim = calculate_appearance_similarity(feat1, feat2)
+    cost = alpha * (1 - iou) + (1 - alpha) * (1 - appearance_sim)
+    return cost
+
 # base class for tracklet
 class tracklet:
     def __init__(self,tracking_ID,box,feature,time):
@@ -38,7 +52,7 @@ class tracklet:
         self.times = [time]
 
         self.cur_box = box
-        self.cur_feature = None
+        self.cur_feature = feature
         self.alive = True
 
         self.final_features = None
@@ -54,7 +68,7 @@ class tracklet:
         self.alive = False
 
     def get_avg_features(self):
-        self.final_features = sum(self.features)/len(self.features) # we do the average pooling for the final features
+        self.final_features = np.mean(self.features, axis=0) # we do the average pooling for the final features
 
 
 # class for multi-object tracker
@@ -63,50 +77,43 @@ class tracker:
         self.all_tracklets = []
         self.cur_tracklets = []
 
-    def run(self, detections, features=None):
+    def run(self, detections, features):
+        for frame_id in range(len(detections)):
+            cur_frame_detection = detections[frame_id]
+            cur_frame_features = features[frame_id]
 
-        for frame_id in range(0,3600):
-
-            if frame_id % 100 == 0:
-                print('Tracking | cur_frame {} | total frame 3600'.format(frame_id))
-
-            inds = detections[:,2] == frame_id
-            cur_frame_detection = detections[inds]
-            if features is not None:
-                cur_frame_features = features[inds]
-
-            # no tracklets in the first frame
             if len(self.cur_tracklets) == 0:
-                for idx in range(len(cur_frame_detection)):
-                    new_tracklet = tracklet(len(self.all_tracklets)+1,cur_frame_detection[idx][3:7],cur_frame_features[idx],frame_id)
+                for idx, det in enumerate(cur_frame_detection):
+                    new_tracklet = tracklet(len(self.all_tracklets) + 1, det[3:7], cur_frame_features[idx], frame_id)
                     self.cur_tracklets.append(new_tracklet)
                     self.all_tracklets.append(new_tracklet)
-
             else:
-                cost_matrix = np.zeros((len(self.cur_tracklets),len(cur_frame_detection)))
+                cost_matrix = np.zeros((len(self.cur_tracklets), len(cur_frame_detection)))
 
                 for i in range(len(self.cur_tracklets)):
                     for j in range(len(cur_frame_detection)):
-                        cost_matrix[i][j] = 1 - calculate_iou(self.cur_tracklets[i].cur_box,cur_frame_detection[j][3:7])
+                        cost_matrix[i][j] = combined_cost(self.cur_tracklets[i].cur_box, cur_frame_detection[j][3:7],
+                                                          self.cur_tracklets[i].cur_feature, cur_frame_features[j])
 
-                row_inds,col_inds = linear_sum_assignment(cost_matrix)
+                row_inds, col_inds = linear_sum_assignment(cost_matrix)
 
-                matches = min(len(row_inds),len(col_inds))
+                matches = min(len(row_inds), len(col_inds))
 
                 for idx in range(matches):
-                    row,col = row_inds[idx],col_inds[idx]
-                    if cost_matrix[row,col] == 1:
+                    row, col = row_inds[idx], col_inds[idx]
+                    if cost_matrix[row, col] == 1:
                         self.cur_tracklets[row].close()
-                        new_tracklet = tracklet(len(self.all_tracklets)+1,cur_frame_detection[col][3:7],cur_frame_features[col],frame_id)
+                        new_tracklet = tracklet(len(self.all_tracklets) + 1, cur_frame_detection[col][3:7],
+                                                cur_frame_features[col], frame_id)
                         self.cur_tracklets.append(new_tracklet)
                         self.all_tracklets.append(new_tracklet)
                     else:
-                        self.cur_tracklets[row].update(cur_frame_detection[col][3:7],cur_frame_features[col],frame_id)
+                        self.cur_tracklets[row].update(cur_frame_detection[col][3:7], cur_frame_features[col], frame_id)
 
                 # initiate unmatched detections as new tracklets
-                for idx,det in enumerate(cur_frame_detection):
-                    if idx not in col_inds: # if it is not matched in the above Hungarian algorithm stage
-                        new_tracklet = tracklet(len(self.all_tracklets)+1,det[3:7],cur_frame_features[idx],frame_id)
+                for idx, det in enumerate(cur_frame_detection):
+                    if idx not in col_inds:  # if it is not matched in the above Hungarian algorithm stage
+                        new_tracklet = tracklet(len(self.all_tracklets) + 1, det[3:7], cur_frame_features[idx], frame_id)
                         self.cur_tracklets.append(new_tracklet)
                         self.all_tracklets.append(new_tracklet)
 
