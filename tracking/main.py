@@ -9,12 +9,21 @@ from Processing import postprocess
 from interpolation import kalman_interpolation
 from interpolation import linear_interpolation
 
+if len(sys.argv) > 1:
+    conf_score = float(sys.argv[1])
+else:
+    conf_score = 0.5
+
+if (len(sys.argv) > 2):
+    interp = sys.argv[2]
+else:
+    interp = 'kalman'
 
 raw_data_root = '/content/drive/MyDrive/EE-443-husky-team-sam/EE-443-husky-team-spr24/data'
 
 W, H = 1920, 1080
 data_list = {
-    'test': ['camera_0008', 'camera_0019', 'camera_0028']
+    'test': ['camera_0005', 'camera_0017', 'camera_0025']
 }
 sample_rate = 1 # because we want to test on all frames
 vis_flag = True # set to True to save the visualizations
@@ -46,24 +55,29 @@ for split in ['test']:
         # Can we remove some low score detection here? For example, removing all the detections with condifence score lower than 0.3?
         # Detection format: <camera ID>, <-1>, <Frame ID>, <x1>, <y1>, <w>, <h>, <confidence score>
         # Remember to change the embedding file too if you modify the detection!
-        idx = detection[:, -2] >= 0.3
+        idx = detection[:, -2] >= conf_score
         detection = detection[idx, :]
         embedding = embedding[idx]
 
         mot = tracker()
         postprocessing = postprocess(number_of_people=20, cluster_method='kmeans')
 
-        # interpolate missing detection of all tracks
-        dout, eout = kalman_interpolation(detection, embedding)
-        
         # Run the IoU tracking
-        tracklets = mot.run(dout, eout)
-
+        tracklets = mot.run(detection, embedding)
+        
         features = np.array([trk.final_features for trk in tracklets])
 
         # Run the Post Processing to merge the tracklets
         labels = postprocessing.run(features) # The label represents the final tracking ID, it starts from 0. We will make it start from 1 later.
 
+        # interpolate missing detection of all tracks
+        if (interp == 'kalman'):
+            print("kalman interp")
+            tracklets = kalman_interpolation(tracklets)
+        elif (interp == 'linear'):
+            print("linear interp")
+            tracklets = linear_interpolation(tracklets)
+    
         tracking_result = []
 
         print('Writing Result ... ')
@@ -75,8 +89,8 @@ for split in ['test']:
                 frame = trk.times[idx]
                 x, y, w, h = trk.boxes[idx]
                 
-                #result = '{},{},{},{},{},{},{},-1,-1 \n'.format(camera_id, final_tracking_id, frame, x-w/2, y-h/2, w, h )
-                result = '{},{},{},{},{},{},{},-1,-1 \n'.format(camera_id, final_tracking_id, frame, x, y, w, h )
+                result = '{},{},{},{},{},{},{},-1,-1 \n'.format(camera_id, final_tracking_id, frame, x-w/2, y-h/2, w, h )
+                #result = '{},{},{},{},{},{},{},-1,-1 \n'.format(camera_id, final_tracking_id, frame, x, y, w, h )
                 
                 tracking_result.append(result)
         
