@@ -6,22 +6,24 @@ import time
 import numpy as np
 from IoU_Tracker import tracker
 from Processing import postprocess
+from interpolation import kalman_interpolation
+from interpolation import linear_interpolation
 
 
-raw_data_root = '/media/cycyang/sda1/EE443_final/data'
+raw_data_root = 'C:/Users/antho/EE-443-husky-team-spr24/data'
 
 W, H = 1920, 1080
 data_list = {
-    'test': ['camera_0008', 'camera_0019', 'camera_0028']
+    'test': ['camera_0025']
 }
 sample_rate = 1 # because we want to test on all frames
 vis_flag = True # set to True to save the visualizations
 
-exp_path = '/media/cycyang/sda1/EE443_final/runs/tracking/inference'
+exp_path = 'C:/Users/antho/EE-443-husky-team-spr24/runs/tracking/inference'
 if not os.path.exists(exp_path):
     os.makedirs(exp_path)
-det_path = '/media/cycyang/sda1/EE443_final/runs/detect/inference/txt'
-emb_path = '/media/cycyang/sda1/EE443_final/runs/reid/inference'
+det_path = 'C:/Users/antho/EE-443-husky-team-spr24/runs/detect/inference/txt'
+emb_path = 'C:/Users/antho/EE-443-husky-team-spr24/runs/reid/inference'
 
 
 for split in ['test']:
@@ -44,12 +46,18 @@ for split in ['test']:
         # Can we remove some low score detection here? For example, removing all the detections with condifence score lower than 0.3?
         # Detection format: <camera ID>, <-1>, <Frame ID>, <x1>, <y1>, <w>, <h>, <confidence score>
         # Remember to change the embedding file too if you modify the detection!
+        idx = detection[:, -2] >= 0.3
+        detection = detection[idx, :]
+        embedding = embedding[idx]
 
-        mot = tracker()y
+        mot = tracker()
         postprocessing = postprocess(number_of_people=20, cluster_method='kmeans')
 
+        # interpolate missing detection of all tracks
+        # dout, eout = kalman_interpolation(detection, embedding)
+
         # Run the IoU tracking
-        tracklets = mot.run(detection ,embedding)
+        tracklets = mot.run(detection, embedding)
 
         features = np.array([trk.final_features for trk in tracklets])
 
@@ -68,6 +76,7 @@ for split in ['test']:
                 x, y, w, h = trk.boxes[idx]
 
                 result = '{},{},{},{},{},{},{},-1,-1 \n'.format(camera_id, final_tracking_id, frame, x-w/2, y-h/2, w, h )
+                # result = '{},{},{},{},{},{},{},-1,-1 \n'.format(camera_id, final_tracking_id, frame, x, y, w, h )
 
                 tracking_result.append(result)
 

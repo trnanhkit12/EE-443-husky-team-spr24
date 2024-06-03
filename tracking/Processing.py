@@ -8,7 +8,7 @@ class postprocess:
             self.cluster_method = KMeans(n_clusters=self.n, random_state=0)
         else:
             raise NotImplementedError
-    
+
     def run(self,features):
 
         print('Start Clustering')
