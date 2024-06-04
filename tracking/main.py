@@ -6,8 +6,7 @@ import time
 import numpy as np
 from IoU_Tracker import tracker
 from Processing import postprocess
-from interpolation import kalman_interpolation
-from interpolation import linear_interpolation
+
 
 
 raw_data_root = 'C:/Users/antho/EE-443-husky-team-spr24/data'
