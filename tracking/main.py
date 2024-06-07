@@ -23,7 +23,7 @@ raw_data_root = '/content/drive/MyDrive/EE-443-husky-team-sam/EE-443-husky-team-
 
 W, H = 1920, 1080
 data_list = {
-    'test': ['camera_0005', 'camera_0017', 'camera_0025']
+    'test': ['camera_0008', 'camera_0019', 'camera_0028']
 }
 sample_rate = 1 # because we want to test on all frames
 vis_flag = True # set to True to save the visualizations
@@ -41,7 +41,8 @@ for split in ['test']:
         emb_npy_path = os.path.join(emb_path, f'{folder}.npy')
         tracking_txt_path = os.path.join(exp_path, f'{folder}.txt')
 
-        detection = np.loadtxt(det_txt_path, delimiter=',', dtype=None)
+        #detection = np.loadtxt(det_txt_path, delimiter=',', dtype=None)
+        detection = np.loadtxt(det_txt_path, delimiter=' ', dtype=None)
         embedding = np.load(emb_npy_path, allow_pickle=True)
 
         print(f"Getting bounding boxes from {det_txt_path} (number of detections: {len(detection)}")
@@ -60,7 +61,7 @@ for split in ['test']:
         embedding = embedding[idx]
 
         mot = tracker()
-        postprocessing = postprocess(number_of_people=20, cluster_method='kmeans')
+        postprocessing = postprocess(number_of_people=50, cluster_method='agglomerative')
 
         # Run the IoU tracking
         tracklets = mot.run(detection, embedding)

@@ -2,11 +2,13 @@ import cv2
 import os
 import sys
 
+# camera used to create video
 if (len(sys.argv) > 1):
     camera = sys.argv[1]
 else:
     camera = 'camera_0005'
 
+# name of created video
 if (len(sys.argv) > 2):
     video_name = sys.argv[2]
 else:
@@ -19,6 +21,7 @@ images = [img for img in os.listdir(image_folder) if img.endswith(".jpg")]
 frame = cv2.imread(os.path.join(image_folder, images[0]))
 height, width, layers = frame.shape
 
+# stich together .jpg images to create a .mp4 video
 fourcc = cv2.VideoWriter_fourcc(*'MP4V')
 video = cv2.VideoWriter(video_name, fourcc, 20.0, (width,height))
 
