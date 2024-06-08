@@ -1,16 +1,17 @@
 ======================================================================================================================================================================
-This is a baseline tracking method provided by TA.
+This is the improved tracking
 
 To run the code, please install the required packages including numpy, sklearn, and scipy.
 
-And then, directly run "python main.py". You should be able to obtain a baseline tracking result.
+And then, directly run "python main.py". You should be able to obtain the tracking result.
 ======================================================================================================================================================================
-Baseline Method Discription:
+Method Discription:
 
-The baseline method consists of two parts. 
+The improved method consists of three parts. 
 
 1. A single camera tracking method using IoU for association. (IoU_Tracker.py)
 2. A postprocessing clustering method that merge the tracklets together based on appearance. (Processing.py)
+3. A postprocessing interpolation method that creates bounding boxes for missing frames. (Interpolation.py)
 ======================================================================================================================================================================
 Before reading the code, please also get familiar with the idea of:
 
