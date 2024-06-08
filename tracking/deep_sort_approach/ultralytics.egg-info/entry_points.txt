@@ -1,3 +1,0 @@
-[console_scripts]
-ultralytics = ultralytics.yolo.cli:cli
-yolo = ultralytics.yolo.cli:cli
