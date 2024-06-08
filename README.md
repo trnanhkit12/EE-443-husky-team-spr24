@@ -67,6 +67,7 @@ python3 detection/3_inference_ultralytics.py
 1. Configure the thresholds in the tracking/preprocessing_for_tracking.py and modify the path variables. Then, run the script. Filtered embedding features .npy and detection results .txt files will be generated in the same directory paths provided for the .npy and .txt files.
 2. Configure the desired interpolation method, clustering method, the number of people, and the export path in the tracking/main.py. 
 3. Run the script. The tracking result is now generated in the path you provided.
+4. There is also a separate implementation using DeepSORT.
 
 ### Evaluation
 
