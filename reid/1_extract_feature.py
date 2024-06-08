@@ -1,29 +1,34 @@
 import os
-import os.path as osp
-import sys
-import time
+import numpy as np
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torchvision.transforms as T
 from PIL import Image
-from argparse import ArgumentParser
-
-import torchreid
 from torchreid.reid.utils import FeatureExtractor
 
+import numpy as np
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
 
-raw_data_root = '/media/cycyang/sda1/EE443_final/data'
+from sklearn.metrics import confusion_matrix,precision_score, recall_score, f1_score
+from scipy.optimize import linear_sum_assignment
+
+
+raw_data_root = '/content/gdrive/MyDrive/EE443/final_proj/data'
+det_path = '/content/gdrive/MyDrive/EE443/final_proj/data/val'
+exp_path = '/content/gdrive/MyDrive/EE443/final_proj/cam_npy'
+reid_first_model_ckpt = '/content/gdrive/MyDrive/EE443/final_proj/EE-443-husky-team-spr24/reid/osnet_x1_0_imagenet.pth'
+reid_second_model_ckpt = '/content/gdrive/MyDrive/EE443/final_proj/EE-443-husky-team-spr24/log/osnet_ain/model/model.pth.tar-12'
+
+data_list = {
+    'val'  : ['camera_0005', 'camera_0017', 'camera_0025']
+}
+
 
 W, H = 1920, 1080
-data_list = {
-    'test': ['camera_0008', 'camera_0019', 'camera_0028']
-}
-sample_rate = 1 # because we want to test on all frames
-
-det_path = '/media/cycyang/sda1/EE443_final/runs/detect/inference/txt'
-exp_path = '/media/cycyang/sda1/EE443_final/runs/reid/inference'
-reid_model_ckpt = '/media/cycyang/sda1/EE443_final/reid/osnet_x1_0_imagenet.pth'
+sample_rate = 1  # because we want to test on all frames
 
 val_transforms = T.Compose([
     T.Resize([256, 128]),
@@ -33,48 +38,61 @@ val_transforms = T.Compose([
 
 reid_extractor = FeatureExtractor(
     model_name='osnet_x1_0',
-    model_path=reid_model_ckpt,
+    model_path=reid_first_model_ckpt,
     image_size=[256, 128],
-    device='cuda' 
-)   
+    device='cuda'
+)
 
-for split in ['test']:
+reid_extractor2 = FeatureExtractor(
+    model_name='osnet_ain_x1_0',
+    model_path=reid_second_model_ckpt,
+    image_size=[256, 128],
+    device='cuda'
+)
+
+
+# for split in ['test']:
+for split in ['val']:
     for folder in data_list[split]:
+        det_txt_path = os.path.join(det_path, f'{folder}.txt')                      # OFFICIAL FOR TESTING
 
-        det_txt_path = os.path.join(det_path, f'{folder}.txt')
         print(f"Extracting feature from {det_txt_path}")
 
-        dets = np.genfromtxt(det_txt_path, dtype=str,delimiter=',')[:100]
-
-        # start extracting frame features
+        dets = np.genfromtxt(det_txt_path, dtype=str, delimiter=',')
         cur_frame = 0
-        emb = np.array([None] * len(dets)) # initialize the feature array
+        emb = np.array([None] * len(dets))  # initialize the feature array
+        emb2 = np.array([None] * len(dets))  # initialize the feature array 
 
-        for idx, (camera_id, _, frame_id, x, y, w, h, score, _) in enumerate(dets):
-            
+        for idx, (camera_id, _, frame_id, x, y, w, h) in enumerate(dets):               # FOR GROUND TRUTHS
+        # for idx, (camera_id, _, frame_id, x, y, w, h, score, _) in enumerate(dets):   # FOR DET RESULTS
             x, y, w, h = map(float, [x, y, w, h])
-            frame_id = str(int(frame_id)) # remove leading space
-            
+            frame_id = str(int(frame_id))  # remove leading space
+
             if idx % 1000 == 0:
                 print(f'Processing frame {frame_id} | {idx}/{len(dets)}')
-            
+
             img_path = os.path.join(raw_data_root, split, folder, frame_id.zfill(5) + '.jpg')
             img = Image.open(img_path)
-
-            img_crop = img.crop((x-w/2, y-h/2, x+w/2, y+h/2))
+            img_crop = img.crop((x, y, x + w, y + h))                                    # FOR GROUND TRUTHS
+            # img_crop = img.crop((x-w/2, y-h/2, x+w/2, y+h/2))                          # FOR DET RESULTS
             img_crop = val_transforms(img_crop.convert('RGB')).unsqueeze(0)
             feature = reid_extractor(img_crop).cpu().detach().numpy()[0]
-
+            feature2 = reid_extractor2(img_crop).cpu().detach().numpy()[0]
             feature = feature / np.linalg.norm(feature)
+            feature2 = feature2 / np.linalg.norm(feature2)
             emb[idx] = feature
+            emb2[idx] = feature2
+        
+        reshaped_emb = np.stack(emb)
+        print(reshaped_emb.shape)
+        reshaped_emb2 = np.stack(emb2)
+        print(reshaped_emb2.shape)
+        shaped_emb = np.concatenate((reshaped_emb.T, reshaped_emb2.T)).T
+        print(shaped_emb.shape)
 
-        # check embedding dimension
-        emb_save_path = os.path.join(exp_path, f'{folder}.npy')
+        emb_save_path = os.path.join(exp_path, f'{folder}.npy')             # file naming
         if not os.path.exists(exp_path):
             os.makedirs(exp_path)
-        np.save(emb_save_path,emb)
+        np.save(emb_save_path, shaped_emb)
+        print(f"Saved merged feature to {emb_save_path}")
 
-
-# TODO 
-# 1. You can try to extract features from the validation set since we have the ground truth labels
-# 2. To determine how good the features, simply use the features to do the clustering and compare the clustering result with the ground truth labels
